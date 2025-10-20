@@ -28,7 +28,6 @@ This app calls multiple OpenAI models in parallel for the same question and disp
 - latency (time taken)  
 - token usage (when available)  
 - pairwise semantic similarity between answers using embeddings  
-\n**Note:** `OPENAI_API_KEY` must be set in your environment or in a `.env` file (not shown in the UI).
 """
 )
 
@@ -70,7 +69,7 @@ with st.sidebar:
         "Parallel requests (threads)", 1, min(8, max(1, len(selected_models) or 1)), value=min(4, max(1, len(selected_models) or 1))
     )
     st.markdown("---")
-    st.markdown("Tip: Set OPENAI_API_KEY as an environment variable (or in `.env` locally).")
+
 
 # --- Main input ---
 st.write("Ask a question to compare model outputs")

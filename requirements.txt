@@ -3,4 +3,5 @@ langchain
 pandas
 langchain-openai
 langchain_core
-streamlit
+streamlit>=1.25
+openai>=1.0.0
