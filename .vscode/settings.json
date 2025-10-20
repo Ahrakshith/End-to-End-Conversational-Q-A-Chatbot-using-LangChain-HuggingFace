@@ -1,6 +1,8 @@
 {
     "cSpell.words": [
         "dotenv",
-        "langchain"
+        "langchain",
+        "massistant",
+        "streamlit"
     ]
 }
