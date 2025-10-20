@@ -115,5 +115,9 @@ GNI Project — 2025
 
 End-to-End Q&A Chatbot using OpenAI and LangChain
 Built to demonstrate Generative AI engineering — from model orchestration to deployment.
+<img width="1440" height="812" alt="Screenshot 2025-10-20 at 11 02 58 PM" src="https://github.com/user-attachments/assets/08b72b36-8a53-4c75-82e2-d26f1cf81e40" />
+<img width="1440" height="808" alt="Screenshot 2025-10-20 at 11 03 19 PM" src="https://github.com/user-attachments/assets/df889574-b341-4a4c-9ed7-9f9705d5a486" />
 
+<img width="1423" height="711" alt="Screenshot 2025-10-20 at 11 03 25 PM" src="https://github.com/user-attachments/assets/c65f0b80-94f4-4363-bae2-701e5fc6c1bf" />
 
+<img width="1440" height="814" alt="Screenshot 2025-10-20 at 11 03 34 PM" src="https://github.com/user-attachments/assets/529d17cc-47ed-475f-aff1-8341c8f2991e" />
