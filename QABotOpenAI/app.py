@@ -1,60 +1,90 @@
-import streamlit as st
-import openai
-from langchain_openai import ChatOpenAI
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
+# app.py (robust, avoids TypeError when env var is missing)
 import os
-import os
+import time
 from dotenv import load_dotenv
-load_dotenv()
+import streamlit as st
 
-## Langsmith Tracking
-os.environ["LANGCHAIN_API_KEY"]=os.getenv("LANGCHAIN_API_KEY")
-os.environ["LANGCHAIN_TRACING_V2"]="true"
-os.environ["LANGCHAIN_PROJECT"]="Simple Q&A Chatbot With OPENAI"
+load_dotenv()  # optional: load values from .env
 
-## Prompt Template
-prompt=ChatPromptTemplate.from_messages(
-    [
-        ("system","You are a helpful massistant . Please  repsonse to the user queries"),
-        ("user","Question:{question}")
-    ]
-)
+st.set_page_config(page_title="Simple Q&A (OpenAI)", layout="wide")
+st.title("Simple Q&A Chatbot (OpenAI) — robust")
 
-def generate_response(question,api_key,engine,temperature,max_tokens):
-    openai.api_key=api_key
+# Safely copy LANGCHAIN env only if present (avoid assigning None)
+langchain_api_key = os.getenv("LANGCHAIN_API_KEY")
+if langchain_api_key is not None:
+    os.environ["LANGCHAIN_API_KEY"] = langchain_api_key
 
-    llm=ChatOpenAI(model=engine)
-    output_parser=StrOutputParser()
-    chain=prompt|llm|output_parser
-    answer=chain.invoke({'question':question})
-    return answer
+# Optionally set or copy other LangChain envs only if present
+langchain_tracing = os.getenv("LANGCHAIN_TRACING_V2")
+if langchain_tracing is not None:
+    os.environ["LANGCHAIN_TRACING_V2"] = langchain_tracing
 
-## #Title of the app
-st.title("Enhanced Q&A Chatbot With OpenAI")
+# Set project name only if provided
+langchain_project = os.getenv("LANGCHAIN_PROJECT")
+if langchain_project is not None:
+    os.environ["LANGCHAIN_PROJECT"] = langchain_project
 
+# Load OpenAI API key from environment or .env
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    st.error("OPENAI_API_KEY not found. Set it in your environment or in a .env file.")
+    st.stop()
 
+# Import openai and set key, with UI-visible error handling
+try:
+    import openai
+    openai.api_key = OPENAI_API_KEY
+    st.write(f"openai package OK")
+except Exception as e:
+    st.error("Failed to import or configure openai.")
+    st.exception(e)
+    st.stop()
 
-## Sidebar for settings
-st.sidebar.title("Settings")
-api_key=st.sidebar.text_input("Enter your Open AI API Key:",type="password")
+# Sidebar controls
+with st.sidebar:
+    st.header("Settings")
+    engine = st.selectbox("Model", ["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"])
+    temperature = st.slider("Temperature", 0.0, 1.0, 0.7, 0.05)
+    max_tokens = st.slider("Max tokens", 50, 2000, 300, 50)
+    st.markdown("---")
+    st.markdown("Note: OPENAI_API_KEY is read from your environment; not shown here.")
 
-## Select the OpenAI model
-engine=st.sidebar.selectbox("Select Open AI model",["gpt-4o","gpt-4-turbo","gpt-4"])
+st.write("Ask a question:")
+question = st.text_area("", height=140, placeholder="Type something like: Explain the difference between X and Y")
 
-## Adjust response parameter
-temperature=st.sidebar.slider("Temperature",min_value=0.0,max_value=1.0,value=0.7)
-max_tokens = st.sidebar.slider("Max Tokens", min_value=50, max_value=300, value=150)
+if st.button("Send"):
+    if not question.strip():
+        st.warning("Please enter a question.")
+    else:
+        st.info("Calling model...")
+        try:
+            start = time.perf_counter()
+            resp = openai.ChatCompletion.create(
+                model=engine,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": question},
+                ],
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            elapsed = time.perf_counter() - start
 
-## MAin interface for user input
-st.write("Goe ahead and ask any question")
-user_input=st.text_input("You:")
+            # Extract answer text safely
+            text = ""
+            choices = resp.get("choices")
+            if choices and len(choices) > 0:
+                # join multiple choices' content if present
+                text = "".join([c.get("message", {}).get("content", "") for c in choices])
+            else:
+                text = resp.get("message", {}).get("content", "")
 
-if user_input and api_key:
-    response=generate_response(user_input,api_key,engine,temperature,max_tokens)
-    st.write(response)
+            st.markdown("### Response")
+            st.write(text)
+            st.caption(f"Model: {engine} • Time: {elapsed:.2f}s • Usage: {resp.get('usage', {})}")
 
-elif user_input:
-    st.warning("Please enter the OPen AI aPi Key in the sider bar")
+        except Exception as e:
+            st.error("Error calling OpenAI API")
+            st.exception(e)
 else:
-    st.write("Please provide the user input")
+    st.info("Type a question and press Send.")
